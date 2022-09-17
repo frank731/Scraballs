@@ -7,20 +7,17 @@ using UnityEngine;
 
 namespace AdhawkApi
 {
-    public struct TrackerStatusStruct : PacketDataStruct
+    public struct TrackerReadyStruct : PacketDataStruct
     {
         //status,
-        public TrackerStatusStruct(byte[] data)
+        public TrackerReadyStruct(byte[] data)
         {
-            int i = 0;
-            data.ReadNextInt8(ref i, out TrackerStatus);
         }
-        public byte TrackerStatus;
     }
-    public class TrackerStatusStream : AHTrackingStream<TrackerStatusStruct>
+    public class TrackerReadyStream : AHTrackingStream<TrackerReadyStruct>
     {
-        public TrackerStatusStream(UDPBehaviour udpClient) : base(udpClient) { }
-        public override byte StreamPacketByte { get { return 0x16; } }
+        public TrackerReadyStream(UDPBehaviour udpClient) : base(udpClient) { }
+        public override byte StreamPacketByte { get { return 0x02; } }
 
         public override udpInfo.StreamControl StreamControlBit { get { return 0; } }
 

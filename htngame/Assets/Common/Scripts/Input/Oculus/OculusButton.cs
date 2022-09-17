@@ -48,6 +48,7 @@ public class OculusButton
     private InputDeviceCharacteristics deviceCharacteristics;
     private List<InputDevice> inputDevices;
     private bool inputValue;
+    private bool oldIsButtonDown;
     private InputFeatureUsage<bool> inputFeature;
 
     public OculusButton(InputDeviceCharacteristics deviceCharacteristics, ButtonOption button)
@@ -64,11 +65,30 @@ public class OculusButton
         inputDevices = new List<InputDevice>();
     }
 
+    void HandleButtonToggleCheck()
+    {
+        if (wasButtonPressedLastFrame)
+        {
+            wasButtonPressedLastFrame = false;
+        }
+        if (oldIsButtonDown != isButtonDown)
+        {
+            if (isButtonDown)
+            {  // button was pressed
+                wasButtonPressedLastFrame = true;
+            }
+
+            oldIsButtonDown = isButtonDown;
+        }
+    }
+
     /// <summary>
     /// Should be called in update function to track if button state was changed since last frame.
     /// </summary>
     public void UpdateCheckButtonPressed()
     {
+        // tricky boolean handling in here is needed because TryGetFeatureValue is very inconsistent about button down operations
+        // it unfortunately sort of tries to treat each button like a simulated joystick.
         InputDevices.GetDevicesWithCharacteristics(deviceCharacteristics, inputDevices);
         if (wasButtonPressedLastFrame)
         {
@@ -76,19 +96,11 @@ public class OculusButton
         }
         for (int i = 0; i < inputDevices.Count; i++)
         {
-            if (inputDevices[i].TryGetFeatureValue(inputFeature, out inputValue) && inputValue)
-            {
-                if (!isButtonDown)
-                {
-                    isButtonDown = true;
-                    wasButtonPressedLastFrame = false;
-                }
-            }
-            else if (isButtonDown)
-            {
-                isButtonDown = false;
-                wasButtonPressedLastFrame = true;
-            }
+            inputDevices[i].TryGetFeatureValue(inputFeature, out inputValue);
+            isButtonDown = inputValue;
         }
+
+        HandleButtonToggleCheck();
+
     }
 }

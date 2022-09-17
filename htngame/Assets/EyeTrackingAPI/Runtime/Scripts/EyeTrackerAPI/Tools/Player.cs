@@ -49,7 +49,7 @@ namespace AdhawkApi
 
             if (EyeCenter == null)
             {
-                EyeCenter = transform;
+                EyeCenter = Camera.main.transform;
             }
             if (Cam == null)
             {

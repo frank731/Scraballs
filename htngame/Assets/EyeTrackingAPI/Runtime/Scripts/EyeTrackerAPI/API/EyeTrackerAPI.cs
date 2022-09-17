@@ -106,6 +106,7 @@ namespace AdhawkApi
             udpClient.RegisterOnConnect(() => {
                 Streams.Gaze.Start();
                 Events.Blink.Start();
+                Streams.TrackerReady.Start();
                 SetLogMode(AdHawkAnalyticsLogMode);
             });
 
@@ -124,6 +125,7 @@ namespace AdhawkApi
             Streams.GlintXY.AddListener((data) => HandleGlint((GlintDataStruct)data));
             Streams.PupilXY.AddListener((data) => HandlePupilXY((PupilXYStruct)data));
             Streams.PupilXY.AddListener((data) => HandleFuse((FuseDataStruct)data));
+            Streams.TrackerReady.AddListener((data) => HandleTrackerReady((TrackerReadyStruct)data));
         }
 
         private void OnDestroy()

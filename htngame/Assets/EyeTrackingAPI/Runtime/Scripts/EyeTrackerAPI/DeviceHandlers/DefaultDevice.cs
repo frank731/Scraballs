@@ -51,7 +51,7 @@ namespace AdhawkApi
         /// </summary>
         protected float errorTimer;
 
-        protected bool nextPoint = false;
+        protected bool forceNextPoint = false;
 
         /// <summary>
         /// Tracks the previous parent transform of the gaze target object so it can be put back after
@@ -125,123 +125,6 @@ namespace AdhawkApi
             }
         }
 
-        private IEnumerator RunCalibrationSequence(Vector2[] points, float hSpan, float vSpan, float hOffsetAngle, float vOffsetAngle, bool random=true)
-        {
-            if (Calibrating) yield break; Calibrating = true;
-
-            Vector2[] pointsRan = points;
-            Shuffle(pointsRan);
-
-            Debug.Log("Calibration request.");
-
-            UDPRequestStatus startReqStatus = UDPRequestStatus.None;
-
-            yield return EyeTrackerAPI.Instance.QueryBeginCalibration(successCallback: (byte[] data, UDPRequestStatus result) => {
-                startReqStatus = result;
-            });
-
-            ShowTarget();
-
-            bool next = false;
-
-            for (int curPoint = 0; curPoint < points.Length; curPoint = next ? curPoint + 1 : curPoint)
-            {
-                next = false;
-
-                Vector3 targetPos = Quaternion.Euler(points[curPoint].y * (vSpan / 2) + vOffsetAngle, 0, 0) * Vector3.forward;
-                targetPos = Quaternion.Euler(0, points[curPoint].x * (hSpan / 2) + hOffsetAngle, 0) * targetPos;
-
-                targetPos = targetPos * calTargetDistance;
-
-                target.transform.localPosition = targetPos;
-                bool cancel = false;
-                bool skip = false;
-                Debug.Log("Listening for input...");
-                yield return new WaitUntil(() =>
-                {
-                    if (Input.GetKeyDown(KeyCode.Escape))
-                    {
-                        cancel = true;
-                        nextPoint = false;
-                        return true;
-                    }
-                    if (Input.GetKeyDown(KeyCode.RightArrow))
-                    {
-                        next = true;
-                        nextPoint = false;
-                        skip = true;
-                        return true;
-                    }
-                    return Input.GetButtonDown(CalibrationHelper.button_calibration_next) || nextPoint;
-                });
-                if (skip || cancel) yield return null;
-                if (skip) continue;
-                if (cancel) break;
-                nextPoint = false;
-
-                UDPRequestCallback callback = (byte[] data, UDPRequestStatus status) =>
-                {
-                    if (status == UDPRequestStatus.AckSuccess)
-                    {
-                        next = true;
-                    }
-                    else if (status == UDPRequestStatus.Timeout)
-                    {
-                        SetErrorText("Error: Timeout when waiting for backend response.");
-                    }
-                    else
-                    {
-                        if (data.Length == 1)
-                        {
-                            SetErrorText("Error: " + udpInfo.GetAckPacketTypeInfo(data[0]));
-                        }
-                    }
-                };
-
-                Vector3 sendPos = targetPos;
-
-                // override next and error for now
-
-                yield return EyeTrackerAPI.Instance.RegisterCalibrationPoint(sendPos, callback);
-                if (EyeTrackerAPI.Instance.autoSkipInvalidCalibrationPoints)
-                {
-                    target.PulseTarget();
-                    next = true;
-                }
-                else
-                {
-                    if (next == true)
-                    {
-                        target.PulseTarget();
-                    }
-                    else
-                    {
-                        target.PulseError();
-                    }
-                }
-
-                yield return new WaitForSeconds(0.45f);
-            }
-
-            HideTarget();
-            Calibrating = false;
-            if (Input.GetKeyDown(KeyCode.Escape))
-            {
-                yield return EyeTrackerAPI.Instance.AbortCalibration();
-            }
-            else
-            {
-                yield return EyeTrackerAPI.Instance.QueryEndCalibration(1, (byte[] data, UDPRequestStatus result) =>
-                {
-                    if (result == UDPRequestStatus.Timeout)
-                    {
-                        Debug.LogError("Error: Timeout when requesting calibration end.");
-                        SetErrorText("Timeout when ending calibration");
-                    }
-                });
-            }
-        }
-
         public AnimationCurve targetMovementCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
         public AnimationCurve targetSizeCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
@@ -287,6 +170,17 @@ namespace AdhawkApi
             Vector2[] pointsRan = CalibrationHelper.fixedPoints;
             Shuffle(pointsRan);
 
+            for(int i = 0; i < pointsRan.Length; i++)
+            {
+                if (pointsRan[i] == Vector2.zero)
+                { // swap center point to start.
+                    if (i == 0) break;
+                    Vector2 temp = pointsRan[i];
+                    pointsRan[i] = pointsRan[0];
+                    pointsRan[0] = Vector3.zero;
+                }
+            }
+
             if (Calibrating) yield break; Calibrating = true;
 
             ShowTarget();
@@ -307,17 +201,13 @@ namespace AdhawkApi
 
             ShowTarget();
 
-
-            bool next = false;
-
             // current standard supported FOV for eyetracking:
             float horizontal_angle_spread = 40.0f;
             float vertical_angle_spread = 25.0f;
 
-            for (int curPoint = 0; curPoint < pointsRan.Length; curPoint = next ? curPoint + 1 : curPoint)
-            {
-                next = false;
 
+            for (int curPoint = 0; curPoint < pointsRan.Length; curPoint++)
+            {
                 Vector3 targetPos = Quaternion.Euler(pointsRan[curPoint].y * (vertical_angle_spread/2) + calAngleOffset.x, 0, 0) * Vector3.forward;
                 targetPos = Quaternion.Euler(0, pointsRan[curPoint].x * (horizontal_angle_spread/2) + calAngleOffset.y, 0) * targetPos;
 
@@ -325,37 +215,39 @@ namespace AdhawkApi
 
 
                 // animate target here:
-                yield return StartCoroutine(AnimateTargetToPoint(targetPos));
-
-                bool cancel = false;
-                bool skip = false;
-                yield return new WaitUntil(() =>
+                if (curPoint > 0)
                 {
-                    if (Input.GetKeyDown(KeyCode.Escape))
+                    yield return StartCoroutine(AnimateTargetToPoint(targetPos));
+                    bool cancelProcedure = false;
+                    bool skipThisRegisterCalPoint = false;
+                    yield return null;
+                    forceNextPoint = false;
+                    yield return new WaitUntil(() =>
                     {
-                        cancel = true;
-                        nextPoint = false;
-                        return true;
-                    }
-                    if (Input.GetKeyDown(KeyCode.RightArrow))
-                    {
-                        next = true;
-                        nextPoint = false;
-                        skip = true;
-                        return true;
-                    }
-                    return Input.GetButtonDown(CalibrationHelper.button_calibration_next) || nextPoint;
-                });
-                if (skip || cancel) yield return null;
-                if (skip) continue;
-                if (cancel) break;
-                nextPoint = false;
+                        if (Input.GetKeyDown(KeyCode.Escape))
+                        {
+                            cancelProcedure = true;
+                            forceNextPoint = false;
+                            return true;
+                        }
+                        if (Input.GetKeyDown(KeyCode.RightArrow))
+                        {
+                            forceNextPoint = false;
+                            skipThisRegisterCalPoint = true;
+                            return true;
+                        }
+                        return Input.GetButtonDown(CalibrationHelper.button_calibration_next) || forceNextPoint;
+                    });
+                    if (skipThisRegisterCalPoint || cancelProcedure) yield return null;
+                    if (skipThisRegisterCalPoint) continue;
+                    if (cancelProcedure) break;
+                }
 
                 UDPRequestCallback callback = (byte[] data, UDPRequestStatus status) =>
                 {
                     if (status == UDPRequestStatus.AckSuccess)
                     {
-                        next = true;
+                        Debug.Log("Point registered successfully!");
                     }
                     else if (status == UDPRequestStatus.Timeout)
                     {
@@ -365,6 +257,7 @@ namespace AdhawkApi
                     {
                         if (data.Length == 1)
                         {
+                            Debug.Log("(Ignore) Point returned: " + udpInfo.GetAckPacketTypeInfo(data[0]));
                             if (data[0] != 0x02)
                             {
                                 SetErrorText("Error: " + udpInfo.GetAckPacketTypeInfo(data[0]));
@@ -379,7 +272,6 @@ namespace AdhawkApi
 
                 yield return EyeTrackerAPI.Instance.RegisterCalibrationPoint(sendPos, callback);
                 target.PulseTarget();
-                next = true;
                 // if (next == true)
                 // {
                 //     target.PulseTarget();
@@ -429,30 +321,30 @@ namespace AdhawkApi
                 Debug.Log("Validation Position: " + (CalibrationHelper.fixedPoints4x4[curPoint].y * calAngleSpread.x + calAngleOffset.x).ToString());
 
                 target.transform.localPosition = targetPos;
-                bool cancel = false;
+                bool cancelProcedure = false;
                 bool skip = false;
-                nextPoint = false;
+                forceNextPoint = false;
                 yield return new WaitUntil(() =>
                 {
                     if (Input.GetKeyDown(KeyCode.Escape))
                     {
-                        cancel = true;
-                        nextPoint = false;
+                        cancelProcedure = true;
+                        forceNextPoint = false; // for next time
                         return true;
                     }
                     if (Input.GetKeyDown(KeyCode.RightArrow))
                     {
                         next = true;
-                        nextPoint = false;
+                        forceNextPoint = false; // no need, since we're jumping over the registering
                         skip = true;
                         return true;
                     }
-                    return Input.GetButtonDown(CalibrationHelper.button_calibration_next) || nextPoint;
+                    return Input.GetButtonDown(CalibrationHelper.button_calibration_next) || forceNextPoint;
                 });
-                if (skip || cancel) yield return null;
+                if (skip || cancelProcedure) yield return null;
                 if (skip) continue;
-                if (cancel) break;
-                nextPoint = false;
+                if (cancelProcedure) break;
+                forceNextPoint = false;
 
                 UDPRequestCallback callback = (byte[] data, UDPRequestStatus status) =>
                 {
@@ -542,7 +434,7 @@ namespace AdhawkApi
         {
             if (EyeTrackerAPI.Instance.Calibrating)
             {
-                nextPoint = true;
+                forceNextPoint = true;
             }
         }
         public override Vector3 ProcessGazeVector(GazeDataStruct gazeData)

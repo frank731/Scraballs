@@ -18,6 +18,8 @@ namespace AdhawkApi
 
         private SystemErrorHandler ErrorCallback;
 
+        private double lastTrackerReadySignalTime = 0;
+
         private Camera _maincam;
         private Camera MainCam
         {
@@ -55,6 +57,12 @@ namespace AdhawkApi
         private void HandlePupilXY(PupilXYStruct pupilxyData)
         {
             PupilPositions[pupilxyData.TrackerId] = pupilxyData.Position;
+        }
+
+        private void HandleTrackerReady(TrackerReadyStruct data)
+        {
+            Debug.Log("Tracker ready recieved");
+            lastTrackerReadySignalTime = Time.time;
         }
 
         private void HandleBlink(BlinkDataStruct blinkData)

@@ -21,6 +21,7 @@ namespace AdhawkApi
             IMU = new IMURotationStream(udpClient);
             PulseXY = new PulseDataStream(udpClient);
             TrackerStatus = new TrackerStatusStream(udpClient);
+            TrackerReady = new TrackerReadyStream(udpClient);
         }
         public GazeStream Gaze;
         public GazeInScreenStream GazeInScreen;
@@ -35,5 +36,6 @@ namespace AdhawkApi
         public IMURotationStream IMU;
         public PulseDataStream PulseXY;
         public TrackerStatusStream TrackerStatus;
+        public TrackerReadyStream TrackerReady;
     }
 }

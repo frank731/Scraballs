@@ -565,6 +565,7 @@ namespace AdhawkApi
         }
         private IEnumerator RequestAutotuneCoroutine(float timeout = 4.0f)
         {
+            double curLastTrackerReadyTime = lastTrackerReadySignalTime;
             Debug.Log("Requesting autotune");
             if (RunningAutotune)
             {
@@ -593,6 +594,24 @@ namespace AdhawkApi
                 timeout: timeout
             );
             Debug.Log("Autotune request sent.");
+            float time_waited = 0;
+            float tracker_ready_timeout = 8.0f;
+            yield return new WaitUntil(() =>
+            {
+                time_waited += Time.deltaTime;
+                if (time_waited > tracker_ready_timeout)
+                {
+                    Debug.LogError("Timeout when waiting for tracker ready signal");
+                    return true;
+                } 
+                if (curLastTrackerReadyTime != lastTrackerReadySignalTime)
+                {
+                    Debug.Log("Tracker ready signal recieved, autotune complete.");
+                    return true;
+                }
+                return false;
+            });
+
             RunningAutotune = false;
         }
 
