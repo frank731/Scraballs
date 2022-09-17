@@ -1,0 +1,15 @@
+{
+    "name": "AdhawkUnity",
+    "references": [
+        "GUID:e1f7dcfc372206d41920cf52ee17f26a"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

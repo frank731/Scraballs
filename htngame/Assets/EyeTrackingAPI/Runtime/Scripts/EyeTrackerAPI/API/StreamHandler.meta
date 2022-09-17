@@ -1,0 +1,12 @@
+fileFormatVersion: 2
+<<<<<<< HEAD:Assets/HenryRietra/Eyeballs/Materials.meta
+guid: 8fa5f9b1e53d49d43af5e265ceb1685d
+=======
+guid: 668ff9b7950a54d449c02b14e69dbf10
+>>>>>>> 53dd271... TRSW-4924 initial WIP refactor for unity SDK to implement sensible streams/data access:Assets/EyeTrackingAPI/Runtime/Scripts/EyeTrackerAPI/API/StreamHandler.meta
+folderAsset: yes
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

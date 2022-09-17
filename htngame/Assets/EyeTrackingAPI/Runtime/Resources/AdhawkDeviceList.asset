@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7750b8ea34b6084b8c6c4939486faf4, type: 3}
+  m_Name: AdhawkDeviceList
+  m_EditorClassIdentifier: EyeTrackerAPI:AdhawkApi:SpawnManagerScriptableObject
+  DeviceHandlers:
+  - prefab: {fileID: 2934517330954596191, guid: eecbf9fed825eed4e92eaea8052bde96,
+      type: 3}
+    serialIdentifier: mer
+  DefaultDevice: {fileID: 2934517330954596191, guid: eecbf9fed825eed4e92eaea8052bde96,
+    type: 3}
