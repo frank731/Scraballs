@@ -5,6 +5,9 @@ TagManager:
   serializedVersion: 2
   tags:
   - ScreenSpaceBoardOrigin
+  - Ground
+  - Table
+  - Ball
   layers:
   - Default
   - TransparentFX
