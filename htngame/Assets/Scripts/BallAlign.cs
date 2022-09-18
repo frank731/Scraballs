@@ -16,7 +16,7 @@ public class BallAlign : Singleton<BallAlign>
             //ball.transform.SetParent(ballHolder);
             ball.GetComponent<Rigidbody>().isKinematic = true;
             ball.transform.position = curPos;
-            ball.transform.rotation = Quaternion.Euler(0, 0, 0);
+            ball.transform.rotation = Quaternion.Euler(0, -16, 0);
             curPos.x += ballSize;
         }
     }
@@ -25,7 +25,7 @@ public class BallAlign : Singleton<BallAlign>
     {
         if (collision.collider.CompareTag("Ball")) {
             BallLetter bl = collision.gameObject.GetComponent<BallLetter>();
-            if (!bl.grabbed)
+            if (!bl.grabbed && bl.touched)
             {
                 balls.Add(collision.gameObject);
                 bl.inTable = true;

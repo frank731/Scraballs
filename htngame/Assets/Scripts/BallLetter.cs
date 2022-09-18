@@ -7,6 +7,7 @@ public class BallLetter : MonoBehaviour
 {
     public char character;
     public bool grabbed;
+    public bool touched;
     public bool inTable;
     public Rigidbody rb;
     public XRGrabInteractable grab;
@@ -16,7 +17,7 @@ public class BallLetter : MonoBehaviour
         gameManager = GameManager.Instance;
         int charInd = Random.Range(0, 25);
         GetComponent<MeshRenderer>().material = gameManager.materials[charInd];
-        character = (char)(charInd + 65);
+        character = (char)(charInd + 97);
     }
     public void OnGrab()
     {
@@ -26,7 +27,6 @@ public class BallLetter : MonoBehaviour
             //Debug.Log("grabbed");
             if (inTable)
             {
-                Debug.Log("out");
                 if(BallAlign.Instance.balls.Contains(gameObject)) BallAlign.Instance.balls.Remove(gameObject);
                 BallAlign.Instance.AlignBalls();
                 rb.isKinematic = false;
@@ -42,5 +42,11 @@ public class BallLetter : MonoBehaviour
         if(grabbed) grabbed = false;
         rb.isKinematic = false;
     }
-   
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.collider.CompareTag("GameController"))
+        {
+            touched = true;
+        }
+    }
 }
