@@ -19,6 +19,7 @@ public class GameManager : Singleton<GameManager>
     public GameObject spawner;
     public ButtonController buttonController;
     public GameObject homeButton;
+    public bool finished;
 
     public void Start()
     {
@@ -43,13 +44,14 @@ public class GameManager : Singleton<GameManager>
             timeLeft -= Time.deltaTime;
             UpdateDisplay();
         }
-        else
+        else if(!finished)
         {
             Destroy(spawner);
             buttonController.enabled = false;
             HUD.text = "Game Over!\nFinal score: " + score.ToString() + "\nPress the red button to return to return to the home screen";
             HUD.gameObject.transform.parent.transform.position = new Vector3(0, HUD.gameObject.transform.parent.transform.position.y, HUD.gameObject.transform.parent.transform.position.z);
             homeButton.SetActive(true);
+            finished = true;
         }
     }
 

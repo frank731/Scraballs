@@ -38,7 +38,7 @@ public class CalibrationHandler : MonoBehaviour
             // EyeTrackerAPI.Instance.RunCalibrationProcedure();
             yield return (Player.Instance.Device as DefaultDevice).RunCalibration();
         }
-
+        Destroy(Player.Instance.gameObject);
         SceneManager.LoadScene(2);
         
     }

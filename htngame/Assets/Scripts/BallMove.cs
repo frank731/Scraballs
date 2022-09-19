@@ -7,9 +7,11 @@ public class BallMove : MonoBehaviour
     public Rigidbody rb;
     public BallLetter bl;
     public float dg;
+    public Vector3 ogVel;
     void Start()
     {
         rb.AddForce(new Vector3(0, Random.Range(350, 370), 0) * 1.32f);
+        ogVel = new Vector3(rb.velocity.x, rb.velocity.y, -15);
         OffGaze();
     }
 
@@ -23,13 +25,14 @@ public class BallMove : MonoBehaviour
 
     public void OnGaze()
     {
-        rb.velocity = new Vector3(rb.velocity.x / 3, rb.velocity.y / 3, -1);
+        ogVel = rb.velocity;
+        rb.velocity = new Vector3(rb.velocity.x / 3, rb.velocity.y / 3, -2);
         rb.angularVelocity = new Vector3(3.33f, 0, 0);
     }
 
     public void OffGaze()
     {
-        rb.velocity = new Vector3(rb.velocity.x, rb.velocity.y, -15);
+        rb.velocity = ogVel;
         rb.angularVelocity = new Vector3(10, 0, 0);
     }
 }

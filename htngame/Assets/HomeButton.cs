@@ -9,6 +9,8 @@ public class HomeButton : MonoBehaviour
     {
         if (collision.collider.CompareTag("GameController"))
         {
+            Destroy(BallAlign.Instance.gameObject);
+            Destroy(GameManager.Instance.gameObject);
             SceneManager.LoadScene(0);
         }
     }
