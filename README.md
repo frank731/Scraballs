@@ -1,4 +1,4 @@
-# htn2022
+# Hack the North 2022
 
 # Inspiration
 As students ourselves, we know that English classes aren't always the most fun. So, we set out to create a project that was both effective at teaching English and interactive. The purpose of this project was to also to help students in improving their skills such as multitasking and reaction time.
